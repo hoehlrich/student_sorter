@@ -6,6 +6,8 @@
 # email henryoeh@gmail.com
 # -----------------------------------------------------------
 
+import random
+
 class Course:
     '''Course Class'''
 
@@ -24,11 +26,9 @@ class Course:
         return self.maxsize
 
     def is_full(self):
-        # return wether or not the course is full
         return len(self.students) >= self.maxsize
 
     def add_student(self, student):
-        # add the student to the course if it is not full
         if not self.is_full() and student not in self.students:
             self.students.append(student)
             student.courses.append(self)
@@ -37,17 +37,14 @@ class Course:
             return False
     
     def __str__(self):
-        # create the string with the students and the name of the course
         string = self.name
 
-        # if there are no students in the course, return the course name
         if self.students == 0:
             return string
         
         for student in self.students:
             string = string + r', ' + student.name
         
-        # replace the first comman with a colon
         string = string.replace(',', ':', 1)
 
         return string
@@ -70,14 +67,14 @@ class Student:
     def get_courses(self):
         return self.courses
     
-    def assign_course(self):
+    def assign_course(self, period):
         for course in self.course_request:
-            if not course.is_full():
+            if len(course.students) < (course.maxsize *(period.period_num/len(Period.periods))) and course in period.courses:
                 self.course_request.remove(course)
                 return self.add_course(course)
 
         for course in Course.courses:
-            if not course.is_full():
+            if not course.is_full() and course not in self.courses:
                 return self.add_course(course)
         
         return False
@@ -92,28 +89,66 @@ class Student:
         for course in self.courses:
             string = string + r', ' + course.name
         
-        string = string.replace(',', ':', 1)
+        return string.replace(',', ':', 1)
 
-        return string
+class Period:
+    '''Period Class'''
+
+    periods = []
+    def __init__(self, period_num, courses):
+        self.period_num = period_num
+        self.courses = courses
+        Period.periods.append(self)
+
+    def add_course(self, course):
+        self.courses.append(course)
+
+    def __str__(self):
+        string = str(self.period_num)
+
+        for course in self.courses:
+            string = string +r', ' + course.name
+        
+        return string.replace(',', ':', 1)
+
+class Teacher:
+    '''Teacher Class'''
+
+    def __init__(self, name, courses):
+        self.name = name
+        self.courses = courses
+    
+    def add_course(self, course):
+        self.courses.append(course)
 
 chem = Course('chemistry', 3)
 hx = Course('history', 3)
 sci = Course('science', 3)
 ela = Course('english', 3)
+ocean = Course('oceanography', 3)
 
 s1 = Student('bobo', [ela, hx, sci])
 s2 = Student('marvin', [hx, sci, ela])
 s3 = Student('henry', [sci, ela, chem])
+s4 = Student('z', [chem, hx, ela])
 
-for i in range(3):
-    s1.assign_course()
-    s2.assign_course()
-    s3.assign_course()
+p1 = Period(1, [ela, hx, chem])
+p2 = Period(2, [ela, hx, sci])
+p3 = Period(3, [chem, ela, sci])
+
+for student in Student.students:
+    for period in Period.periods:
+        student.assign_course(period)
 
 for course in Course.courses:
     print(course)
+
+print()
 
 for student in Student.students:
     print(student)
 
 print()
+
+for period in Period.periods:
+    print(period)
