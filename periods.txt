@@ -1,0 +1,4 @@
+1	chem	math	ela	sci	hx
+2	chem	sci	german	math	hx
+3	sci	hx	ela	math	german
+4	ela	german	sci	math	hx

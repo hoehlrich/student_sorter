@@ -1,0 +1,10 @@
+henry	math	chem	ela	german
+bobo	chem	hx	ela	sci
+evan	sci	math	hx	ela
+z	chem	math	sci	german
+marvin	sci	german	hx	math
+alex	chem	sci	math	hx
+aditya	hx	sci	math	chem
+zach	ela	hx	sci	chem
+noah	chem	sci	ela	hx
+william	german	math	chem	sci

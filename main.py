@@ -12,12 +12,14 @@ class Course:
     '''Course Class'''
 
     courses = []
+    course_names = []
 
     def __init__(self, name, maxsize):
         self.name = name
         self.maxsize = maxsize
         self.students = []
         Course.courses.append(self)
+        Course.course_names.append(name)
     
     def get_name(self):
         return self.name
@@ -55,9 +57,12 @@ class Student:
     students = []
     def __init__(self, name, course_request):
         self.name = name
-        self.course_request = course_request
         self.courses = []
         Student.students.append(self)
+        self.course_request_orig = course_request
+        for course in course_request:
+            course_request[course_request.index(course)] = Course.courses[Course.course_names.index(course)]
+        self.course_request = course_request
 
     def add_course(self, course):
         self.courses.append(course)
@@ -65,16 +70,19 @@ class Student:
         return self.courses
     
     def get_courses(self):
-        return self.courses
+        courses = []
+        for course in self.courses:
+            courses.append(course.name)
+        return courses
     
     def assign_course(self, period):
         for course in self.course_request:
-            if len(course.students) < (course.maxsize *(period.period_num/len(Period.periods))) and course in period.courses:
+            if len(course.students) < (course.maxsize * (period.period_num/len(Period.periods))) and course in period.courses and course not in self.courses:
                 self.course_request.remove(course)
                 return self.add_course(course)
 
         for course in Course.courses:
-            if not course.is_full() and course not in self.courses:
+            if len(course.students) < (course.maxsize * (period.period_num/len(Period.periods))) and course in period.courses and course not in self.courses:
                 return self.add_course(course)
         
         return False
@@ -97,8 +105,10 @@ class Period:
     periods = []
     def __init__(self, period_num, courses):
         self.period_num = period_num
-        self.courses = courses
         Period.periods.append(self)
+        for course in courses:
+            courses[courses.index(course)] = Course.courses[Course.course_names.index(course)]
+        self.courses = courses
 
     def add_course(self, course):
         self.courses.append(course)
@@ -111,44 +121,76 @@ class Period:
         
         return string.replace(',', ':', 1)
 
-class Teacher:
-    '''Teacher Class'''
+# Read from file
+courses = open('courses.txt', 'r')
 
-    def __init__(self, name, courses):
-        self.name = name
-        self.courses = courses
-    
-    def add_course(self, course):
-        self.courses.append(course)
+courses = courses.read()  # Read the file as a string
 
-chem = Course('chemistry', 3)
-hx = Course('history', 3)
-sci = Course('science', 3)
-ela = Course('english', 3)
-ocean = Course('oceanography', 3)
+courses = courses.split('\n')   # Split the file at every line
 
-s1 = Student('bobo', [ela, hx, sci])
-s2 = Student('marvin', [hx, sci, ela])
-s3 = Student('henry', [sci, ela, chem])
-s4 = Student('z', [chem, hx, ela])
+for i in range(len(courses)):
+    courses[i] = courses[i].split(' ')
+    courses[i][1] = int(courses[i][1])
 
-p1 = Period(1, [ela, hx, chem])
-p2 = Period(2, [ela, hx, sci])
-p3 = Period(3, [chem, ela, sci])
+students = open('students.txt', 'r')
 
-for student in Student.students:
-    for period in Period.periods:
+students = students.read()  # Read the file as a string
+
+students = students.split('\n')
+
+for i in range(len(students)):
+    students[i] = str(students[i]).split('\t')
+
+for i in range(len(students)):
+    students[i] = [students[i][0], students[i][1:len(students[i])]]
+    random.shuffle(students[i][1])
+
+periods = open('periods.txt', 'r')
+
+periods = periods.read()  # Read the file as a string
+
+periods = periods.split('\n')
+
+for i in range(len(periods)):
+    periods[i] = str(periods[i]).split('\t')
+
+for i in range(len(periods)):
+    periods[i] = [int(periods[i][0]), periods[i][1:len(periods[i])]]
+
+# Define objs
+for course in courses:
+    Course(course[0], course[1])
+
+for student in students:
+    Student(student[0], student[1])
+
+for period in periods:
+    Period(period[0], period[1])
+
+# main
+
+# Assign courses
+for period in Period.periods:
+    students = Student.students
+    random.shuffle(students)
+    for student in students:
         student.assign_course(period)
 
+# Print courses and the students in them
 for course in Course.courses:
     print(course)
 
 print()
 
+# Print students and the courses they have as well as how many courses they got that they asked for
 for student in Student.students:
-    print(student)
+    print(student, len(Period.periods) - len(student.course_request))
 
 print()
 
-for period in Period.periods:
-    print(period)
+# Print period and all classes assigned in that period
+for i in range(len(Period.periods)):
+    period_classes = []
+    for student in Student.students:
+        period_classes.append(student.get_courses()[i])
+    print('Period', (str(i + 1) + ':'), period_classes)
